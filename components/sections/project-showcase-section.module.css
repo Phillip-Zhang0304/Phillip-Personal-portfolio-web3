@@ -188,6 +188,7 @@
   background: rgba(8, 10, 16, 0.9);
   opacity: 0;
   pointer-events: none;
+  touch-action: none;
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
@@ -204,6 +205,7 @@
   height: 4px;
   transform: rotate(-90deg);
   border-radius: 999px;
+  touch-action: none;
   background: linear-gradient(
     to right,
     #d2ff03 0%,

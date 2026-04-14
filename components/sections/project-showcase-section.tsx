@@ -338,13 +338,53 @@ function MinimalVideoPlayer({
   const playerIdRef = useRef(`video-player-${Math.random().toString(36).slice(2)}`);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsTimeoutRef = useRef<number | null>(null);
+  const tapTimeoutRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(sharedPlayerMuted);
   const [volume, setVolume] = useState(sharedPlayerVolume);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [controlsVisible, setControlsVisible] = useState(true);
+  const [controlsVisible, setControlsVisible] = useState(false);
   const [volumeVisible, setVolumeVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const updateMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    updateMobile();
+    window.addEventListener("resize", updateMobile);
+
+    return () => {
+      window.removeEventListener("resize", updateMobile);
+    };
+  }, []);
+
+  useEffect(() => {
+    setControlsVisible(!isMobile);
+    setVolumeVisible(false);
+
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+
+    if (isMobile) {
+      video.muted = false;
+      setIsMuted(false);
+      if (sharedPlayerVolume === 0) {
+        video.volume = 0.6;
+        setVolume(0.6);
+        sharedPlayerVolume = 0.6;
+      }
+    } else {
+      video.muted = sharedPlayerMuted;
+      setIsMuted(sharedPlayerMuted);
+      video.volume = sharedPlayerVolume;
+      setVolume(sharedPlayerVolume);
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     const playerId = playerIdRef.current;
@@ -378,6 +418,9 @@ function MinimalVideoPlayer({
       if (controlsTimeoutRef.current) {
         window.clearTimeout(controlsTimeoutRef.current);
       }
+      if (tapTimeoutRef.current) {
+        window.clearTimeout(tapTimeoutRef.current);
+      }
       registeredPlayers.delete(playerId);
       if (activePlayerId === playerId) {
         activePlayerId = null;
@@ -408,6 +451,10 @@ function MinimalVideoPlayer({
       activePlayerId = playerIdRef.current;
       await video.play();
       setIsPlaying(true);
+      if (isMobile) {
+        setControlsVisible(false);
+        setVolumeVisible(false);
+      }
       return;
     }
 
@@ -419,6 +466,14 @@ function MinimalVideoPlayer({
   };
 
   const toggleMuted = () => {
+    if (isMobile) {
+      setVolumeVisible((current) => !current);
+      if (!controlsVisible) {
+        setControlsVisible(true);
+      }
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) {
       return;
@@ -440,7 +495,7 @@ function MinimalVideoPlayer({
     }
 
     video.volume = nextVolume;
-    syncSharedVolume(nextVolume, nextVolume === 0);
+    syncSharedVolume(nextVolume, isMobile ? false : nextVolume === 0);
   };
 
   const handleProgressChange = (nextProgress: number) => {
@@ -458,9 +513,18 @@ function MinimalVideoPlayer({
       window.clearTimeout(controlsTimeoutRef.current);
     }
     setControlsVisible(true);
+    if (isMobile) {
+      controlsTimeoutRef.current = window.setTimeout(() => {
+        setControlsVisible(false);
+        setVolumeVisible(false);
+      }, 2000);
+    }
   };
 
   const hideControlsWithDelay = () => {
+    if (isMobile) {
+      return;
+    }
     if (controlsTimeoutRef.current) {
       window.clearTimeout(controlsTimeoutRef.current);
     }
@@ -469,19 +533,76 @@ function MinimalVideoPlayer({
     }, 1000);
   };
 
+  const toggleControlsVisibility = () => {
+    if (!isMobile) {
+      return;
+    }
+
+    if (controlsTimeoutRef.current) {
+      window.clearTimeout(controlsTimeoutRef.current);
+    }
+
+    setControlsVisible((current) => {
+      const next = !current;
+      if (next) {
+        controlsTimeoutRef.current = window.setTimeout(() => {
+          setControlsVisible(false);
+          setVolumeVisible(false);
+        }, 2000);
+      } else {
+        setVolumeVisible(false);
+      }
+      return next;
+    });
+  };
+
+  const refreshMobileControlsTimeout = () => {
+    if (!isMobile) {
+      return;
+    }
+
+    if (controlsTimeoutRef.current) {
+      window.clearTimeout(controlsTimeoutRef.current);
+    }
+
+    controlsTimeoutRef.current = window.setTimeout(() => {
+      setControlsVisible(false);
+      setVolumeVisible(false);
+    }, 2000);
+  };
+
+  const handleVideoTap = () => {
+    if (!isMobile) {
+      void togglePlayback();
+      return;
+    }
+
+    if (tapTimeoutRef.current) {
+      window.clearTimeout(tapTimeoutRef.current);
+      tapTimeoutRef.current = null;
+      void togglePlayback();
+      return;
+    }
+
+    tapTimeoutRef.current = window.setTimeout(() => {
+      toggleControlsVisibility();
+      tapTimeoutRef.current = null;
+    }, 220);
+  };
+
   const playPauseMask = isPlaying ? playerPauseIcon : playerPlayIcon;
-  const soundMask = isMuted ? playerMuteIcon : playerSoundIcon;
+  const soundMask = isMobile ? playerSoundIcon : isMuted ? playerMuteIcon : playerSoundIcon;
 
   return (
     <div className="overflow-hidden rounded-[16px] bg-[#11131b]">
       <div
         className="relative aspect-video overflow-hidden rounded-[16px] bg-black"
-        onMouseEnter={showControls}
-        onMouseLeave={hideControlsWithDelay}
+        onMouseEnter={!isMobile ? showControls : undefined}
+        onMouseLeave={!isMobile ? hideControlsWithDelay : undefined}
       >
         <video
           className="h-full w-full cursor-pointer object-cover"
-          onClick={togglePlayback}
+          onClick={handleVideoTap}
           muted={isMuted}
           onEnded={() => setIsPlaying(false)}
           onLoadedData={onAssetLoad}
@@ -513,13 +634,20 @@ function MinimalVideoPlayer({
         {!isPlaying && (
           <button
             aria-label="Play video"
-            className="absolute left-1/2 top-1/2 flex h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#D2FF03] text-black transition-transform duration-200 hover:scale-105"
-            onClick={togglePlayback}
+            className={`absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#D2FF03] text-black transition-transform duration-200 hover:scale-105 ${
+              isMobile ? "h-[60px] w-[60px]" : "h-[120px] w-[120px]"
+            }`}
+            onClick={() => {
+              refreshMobileControlsTimeout();
+              void togglePlayback();
+            }}
             type="button"
           >
             <span
               className={`${styles.playerIconMask} ${styles.playerIconMaskLarge}`}
               style={{
+                width: isMobile ? "24px" : "48px",
+                height: isMobile ? "24px" : "48px",
                 maskImage: `url(${playerPlayIcon})`,
                 WebkitMaskImage: `url(${playerPlayIcon})`
               }}
@@ -532,11 +660,16 @@ function MinimalVideoPlayer({
         />
         <div
           className={`${styles.playerControls} ${controlsVisible ? styles.playerControlsVisible : ""}`}
+          onClick={(event) => event.stopPropagation()}
         >
           <button
             aria-label={isPlaying ? "Pause video" : "Play video"}
             className={styles.playerIconButton}
-            onClick={togglePlayback}
+            onClick={() => {
+              showControls();
+              refreshMobileControlsTimeout();
+              void togglePlayback();
+            }}
             type="button"
           >
             <span
@@ -555,6 +688,11 @@ function MinimalVideoPlayer({
               max={duration || 0}
               min={0}
               onChange={(event) => handleProgressChange(Number(event.target.value))}
+              onInput={(event) =>
+                handleProgressChange(Number((event.target as HTMLInputElement).value))
+              }
+              onPointerDown={() => refreshMobileControlsTimeout()}
+              onPointerMove={() => refreshMobileControlsTimeout()}
               step={0.01}
               style={
                 {
@@ -572,11 +710,15 @@ function MinimalVideoPlayer({
 
           <div
             className={styles.volumeControl}
-            onMouseEnter={() => setVolumeVisible(true)}
-            onMouseLeave={() => setVolumeVisible(false)}
+            onMouseEnter={!isMobile ? () => setVolumeVisible(true) : undefined}
+            onMouseLeave={!isMobile ? () => setVolumeVisible(false) : undefined}
           >
             <div
               className={`${styles.volumePopover} ${volumeVisible ? styles.volumePopoverVisible : ""}`}
+              onPointerDown={(event) => event.stopPropagation()}
+              onPointerMove={(event) => event.stopPropagation()}
+              onTouchStart={(event) => event.stopPropagation()}
+              onTouchMove={(event) => event.stopPropagation()}
             >
               <input
                 aria-label="Video volume"
@@ -584,20 +726,37 @@ function MinimalVideoPlayer({
                 max={1}
                 min={0}
                 onChange={(event) => handleVolumeChange(Number(event.target.value))}
+                onInput={(event) =>
+                  handleVolumeChange(Number((event.target as HTMLInputElement).value))
+                }
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                  refreshMobileControlsTimeout();
+                }}
+                onPointerMove={(event) => {
+                  event.stopPropagation();
+                  refreshMobileControlsTimeout();
+                }}
+                onTouchStart={(event) => event.stopPropagation()}
+                onTouchMove={(event) => event.stopPropagation()}
                 step={0.01}
                 style={
                   {
-                    ["--range-progress" as string]: `${(isMuted ? 0 : volume) * 100}%`
+                    ["--range-progress" as string]: `${(isMobile ? volume : isMuted ? 0 : volume) * 100}%`
                   } as CSSProperties
                 }
                 type="range"
-                value={isMuted ? 0 : volume}
+                value={isMobile ? volume : isMuted ? 0 : volume}
               />
             </div>
             <button
-              aria-label={isMuted ? "Unmute video" : "Mute video"}
+              aria-label={isMobile ? "Show volume controls" : isMuted ? "Unmute video" : "Mute video"}
               className={styles.playerIconButton}
-              onClick={toggleMuted}
+              onClick={() => {
+                showControls();
+                refreshMobileControlsTimeout();
+                toggleMuted();
+              }}
               type="button"
             >
               <span
