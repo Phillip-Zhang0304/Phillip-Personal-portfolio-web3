@@ -312,7 +312,7 @@ export default function Home() {
                       Midjourney, Freepik, and other tools/platforms (multi-model
                       image &amp; video generation)
                     </p>
-                    <div className="pl-[27px] leading-[1.4]">
+                    <div className="leading-[1.4]">
                       <p>AI style training / Character generation</p>
                       <p>AI-assisted 3D and motion output</p>
                     </div>
@@ -382,7 +382,7 @@ export default function Home() {
                   <p className="leading-[1.45]">
                     Midjourney, Freepik, and other tools/platforms (multi-model image &amp; video generation)
                   </p>
-                  <div className="mt-1 pl-4 leading-[1.45]">
+                  <div className="mt-1 leading-[1.45]">
                     <p>AI style training / Character generation</p>
                     <p>AI-assisted 3D and motion output</p>
                   </div>
