@@ -172,7 +172,7 @@ export function WorkExperienceScroller({
         return;
       }
 
-      const nextHeight = Math.max(560, Math.ceil(Math.max(...heights) + 72));
+      const nextHeight = Math.ceil(Math.max(...heights) + 36);
       setMobileCardHeight(nextHeight);
     };
 
