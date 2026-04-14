@@ -263,7 +263,7 @@ export function WorkExperienceScroller({
             </div>
           </div>
 
-          <div className="absolute left-1/2 top-[447px] z-20 h-px w-screen max-w-[1920px] -translate-x-1/2">
+          <div className="absolute left-1/2 top-[399px] z-20 h-px w-screen max-w-[1920px] -translate-x-1/2">
             <img
               alt=""
               className="block h-full w-full object-fill"
@@ -271,7 +271,7 @@ export function WorkExperienceScroller({
             />
           </div>
 
-          <div className="absolute left-0 right-0 top-[320px] z-30 overflow-visible">
+          <div className="absolute left-0 right-0 top-[272px] z-30 overflow-visible">
             <div
               className={`flex items-start gap-[108px] will-change-transform transition-opacity duration-300 ${
                 enabled ? "opacity-100" : "pointer-events-none opacity-0"

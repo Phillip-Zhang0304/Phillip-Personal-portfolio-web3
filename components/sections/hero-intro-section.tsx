@@ -26,6 +26,15 @@ const LOADING_BACKGROUND = "linear-gradient(180deg, #000000 0%, #030034 100%)";
 const FINAL_BACKGROUND = "linear-gradient(180deg, #000000 0%, #0d00b2 100%)";
 const LOOP_BACKGROUND = "linear-gradient(180deg, #000000 0%, #0024D9 100%)";
 
+function isIosChrome() {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  const ua = navigator.userAgent;
+  return /CriOS/i.test(ua) && /iPhone|iPad|iPod/i.test(ua);
+}
+
 function FullBleedTitle({
   src,
   alt,
@@ -221,6 +230,11 @@ function HeroAvatarSequence({
   const brightVideoRef = useRef<HTMLVideoElement | null>(null);
   const [phase, setPhase] = useState<AvatarPhase>("black");
   const [brightRequested, setBrightRequested] = useState(false);
+  const [useStaticAvatarOnly, setUseStaticAvatarOnly] = useState(false);
+
+  useEffect(() => {
+    setUseStaticAvatarOnly(isIosChrome());
+  }, []);
 
   const beginBrightSequence = () => {
     const brightVideo = brightVideoRef.current;
@@ -234,6 +248,11 @@ function HeroAvatarSequence({
   };
 
   useEffect(() => {
+    if (useStaticAvatarOnly) {
+      setPhase("static");
+      return;
+    }
+
     const blackVideo = blackVideoRef.current;
     if (!blackVideo) {
       return;
@@ -241,7 +260,7 @@ function HeroAvatarSequence({
 
     void blackVideo.play().catch(() => {});
     return;
-  }, [phase]);
+  }, [phase, useStaticAvatarOnly]);
 
   return (
     <motion.div
@@ -266,38 +285,42 @@ function HeroAvatarSequence({
             y: drift.y
           }}
         >
-          <video
-            autoPlay
-            className={`absolute inset-0 h-full w-full object-contain ${
-              phase === "black" ? "opacity-100" : "opacity-0"
-            }`}
-            loop={false}
-            muted
-            onEnded={() => {
-              beginBrightSequence();
-            }}
-            playsInline
-            preload="auto"
-            ref={blackVideoRef}
-            src="/avatar-sequence/black.webm"
-          />
-          <video
-            className={`absolute inset-0 h-full w-full object-contain ${
-              phase === "bright" ? "opacity-100" : "opacity-0"
-            }`}
-            muted
-            onEnded={() => {
-              setPhase("static");
-            }}
-            onPlaying={() => {
-              onBrightStart();
-              setPhase("bright");
-            }}
-            playsInline
-            preload="auto"
-            ref={brightVideoRef}
-            src="/avatar-sequence/black-light.webm"
-          />
+          {!useStaticAvatarOnly && (
+            <>
+              <video
+                autoPlay
+                className={`absolute inset-0 h-full w-full object-contain ${
+                  phase === "black" ? "opacity-100" : "opacity-0"
+                }`}
+                loop={false}
+                muted
+                onEnded={() => {
+                  beginBrightSequence();
+                }}
+                playsInline
+                preload="auto"
+                ref={blackVideoRef}
+                src="/avatar-sequence/black.webm"
+              />
+              <video
+                className={`absolute inset-0 h-full w-full object-contain ${
+                  phase === "bright" ? "opacity-100" : "opacity-0"
+                }`}
+                muted
+                onEnded={() => {
+                  setPhase("static");
+                }}
+                onPlaying={() => {
+                  onBrightStart();
+                  setPhase("bright");
+                }}
+                playsInline
+                preload="auto"
+                ref={brightVideoRef}
+                src="/avatar-sequence/black-light.webm"
+              />
+            </>
+          )}
           <img
             alt="Phillip avatar"
             className={`absolute inset-0 h-full w-full object-contain ${
@@ -362,6 +385,20 @@ export function HeroIntroSection({
   const initialInfoTop = isMobile ? "calc(50svh + 146px)" : INITIAL_INFO_TOP;
 
   useEffect(() => {
+    if (isIosChrome()) {
+      setShowFinalBackground(true);
+      setIntroStarted(true);
+      setSettling(true);
+      setIntroComplete(true);
+      setLoopBackground(true);
+      setSkillTagsPlay(true);
+      if (!hasTriggeredLayoutShiftRef.current) {
+        hasTriggeredLayoutShiftRef.current = true;
+        onIntroComplete?.();
+      }
+      return;
+    }
+
     if (!introStarted) {
       return;
     }
