@@ -1416,11 +1416,6 @@ function ProjectPopup({
         >
           <div className="mx-auto h-full w-full max-w-[1152px] overflow-hidden rounded-t-[20px] bg-[#0d0d14] md:rounded-[32px]">
             <div className="relative flex h-full flex-col px-3 pt-3 md:px-8 md:pt-8">
-              {isLoading && (
-                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-                  <div className="h-12 w-12 animate-spin rounded-full border-2 border-[#d2ff03]/20 border-t-[#d2ff03]" />
-                </div>
-              )}
               <div className="popup-scrollbar min-h-0 flex-1 overflow-y-auto pr-0 md:-mr-4 md:pr-4">
                 {content.layout === "otherCampaignDesigns" ? (
                   <OtherCampaignDesignsContent onAssetLoad={handleAssetLoaded} />

@@ -74,19 +74,21 @@
 .mediaSlider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 0;
-  height: 0;
+  width: 20px;
+  height: 20px;
   border: 0;
   box-shadow: none;
   background: transparent;
+  opacity: 0.01;
 }
 
 .mediaSlider::-moz-range-thumb {
-  width: 0;
-  height: 0;
+  width: 20px;
+  height: 20px;
   border: 0;
   box-shadow: none;
   background: transparent;
+  opacity: 0.01;
 }
 
 .playerIconButton {
@@ -230,19 +232,21 @@
 .volumeSlider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 0;
-  height: 0;
+  width: 20px;
+  height: 20px;
   border: 0;
   box-shadow: none;
   background: transparent;
+  opacity: 0.01;
 }
 
 .volumeSlider::-moz-range-thumb {
-  width: 0;
-  height: 0;
+  width: 20px;
+  height: 20px;
   border: 0;
   box-shadow: none;
   background: transparent;
+  opacity: 0.01;
 }
 
 .additionalSequenceFill {
