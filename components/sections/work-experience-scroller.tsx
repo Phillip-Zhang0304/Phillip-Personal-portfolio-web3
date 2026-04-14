@@ -163,9 +163,11 @@ export function WorkExperienceScroller({
       return;
     }
 
+    let lastMeasuredWidth = window.innerWidth;
+
     const measure = () => {
       const heights = mobileCardMeasureRefs.current
-        .map((node) => node?.getBoundingClientRect().height ?? 0)
+        .map((node) => node?.scrollHeight ?? 0)
         .filter((value) => value > 0);
 
       if (heights.length === 0) {
@@ -173,13 +175,26 @@ export function WorkExperienceScroller({
       }
 
       const nextHeight = Math.ceil(Math.max(...heights) + 36);
-      setMobileCardHeight(nextHeight);
+      setMobileCardHeight((current) => (current === nextHeight ? current : nextHeight));
     };
 
     measure();
-    window.addEventListener("resize", measure);
+
+    const handleResize = () => {
+      const nextWidth = window.innerWidth;
+
+      // Ignore mobile browser chrome show/hide resize noise while scrolling.
+      if (Math.abs(nextWidth - lastMeasuredWidth) < 32) {
+        return;
+      }
+
+      lastMeasuredWidth = nextWidth;
+      measure();
+    };
+
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", handleResize);
     };
   }, [experiences, viewportWidth]);
 
