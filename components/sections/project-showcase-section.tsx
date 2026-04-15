@@ -611,8 +611,18 @@ function MinimalVideoPlayer({
             if (!video) {
               return;
             }
-            video.volume = sharedPlayerVolume;
-            video.muted = sharedPlayerMuted;
+
+            if (isMobile) {
+              const nextVolume = sharedPlayerVolume === 0 ? 1 : sharedPlayerVolume;
+              video.volume = nextVolume;
+              video.muted = false;
+              setVolume(nextVolume);
+              setIsMuted(false);
+            } else {
+              video.volume = sharedPlayerVolume;
+              video.muted = sharedPlayerMuted;
+            }
+
             setDuration(video.duration);
             setProgress(video.currentTime);
           }}
