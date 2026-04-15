@@ -708,66 +708,67 @@ function MinimalVideoPlayer({
             </span>
           </div>
 
-          <div
-            className={styles.volumeControl}
-            onMouseEnter={!isMobile ? () => setVolumeVisible(true) : undefined}
-            onMouseLeave={!isMobile ? () => setVolumeVisible(false) : undefined}
-          >
+          {!isMobile && (
             <div
-              className={`${styles.volumePopover} ${volumeVisible ? styles.volumePopoverVisible : ""}`}
-              onPointerDown={(event) => event.stopPropagation()}
-              onPointerMove={(event) => event.stopPropagation()}
-              onTouchStart={(event) => event.stopPropagation()}
-              onTouchMove={(event) => event.stopPropagation()}
+              className={styles.volumeControl}
+              onMouseEnter={() => setVolumeVisible(true)}
+              onMouseLeave={() => setVolumeVisible(false)}
             >
-              <input
-                aria-label="Video volume"
-                className={styles.volumeSlider}
-                max={1}
-                min={0}
-                onChange={(event) => handleVolumeChange(Number(event.target.value))}
-                onInput={(event) =>
-                  handleVolumeChange(Number((event.target as HTMLInputElement).value))
-                }
-                onPointerDown={(event) => {
-                  event.stopPropagation();
-                  refreshMobileControlsTimeout();
-                }}
-                onPointerMove={(event) => {
-                  event.stopPropagation();
-                  refreshMobileControlsTimeout();
-                }}
+              <div
+                className={`${styles.volumePopover} ${volumeVisible ? styles.volumePopoverVisible : ""}`}
+                onPointerDown={(event) => event.stopPropagation()}
+                onPointerMove={(event) => event.stopPropagation()}
                 onTouchStart={(event) => event.stopPropagation()}
                 onTouchMove={(event) => event.stopPropagation()}
-                step={0.01}
-                style={
-                  {
-                    ["--range-progress" as string]: `${(isMobile ? volume : isMuted ? 0 : volume) * 100}%`
-                  } as CSSProperties
-                }
-                type="range"
-                value={isMobile ? volume : isMuted ? 0 : volume}
-              />
-            </div>
-            <button
-              aria-label={isMobile ? "Show volume controls" : isMuted ? "Unmute video" : "Mute video"}
-              className={styles.playerIconButton}
-              onClick={() => {
-                showControls();
-                refreshMobileControlsTimeout();
-                toggleMuted();
-              }}
-              type="button"
-            >
-              <span
-                className={styles.playerIconMask}
-                style={{
-                  maskImage: `url(${soundMask})`,
-                  WebkitMaskImage: `url(${soundMask})`
+              >
+                <input
+                  aria-label="Video volume"
+                  className={styles.volumeSlider}
+                  max={1}
+                  min={0}
+                  onChange={(event) => handleVolumeChange(Number(event.target.value))}
+                  onInput={(event) =>
+                    handleVolumeChange(Number((event.target as HTMLInputElement).value))
+                  }
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                    refreshMobileControlsTimeout();
+                  }}
+                  onPointerMove={(event) => {
+                    event.stopPropagation();
+                    refreshMobileControlsTimeout();
+                  }}
+                  onTouchStart={(event) => event.stopPropagation()}
+                  onTouchMove={(event) => event.stopPropagation()}
+                  step={0.01}
+                  style={
+                    {
+                      ["--range-progress" as string]: `${(isMuted ? 0 : volume) * 100}%`
+                    } as CSSProperties
+                  }
+                  type="range"
+                  value={isMuted ? 0 : volume}
+                />
+              </div>
+              <button
+                aria-label={isMuted ? "Unmute video" : "Mute video"}
+                className={styles.playerIconButton}
+                onClick={() => {
+                  showControls();
+                  toggleMuted();
                 }}
-              />
-            </button>
-          </div>
+                type="button"
+              >
+                <span
+                  className={styles.playerIconMask}
+                  style={{
+                    maskImage: `url(${soundMask})`,
+                    WebkitMaskImage: `url(${soundMask})`
+                  }}
+                />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
